@@ -7,8 +7,8 @@ using UnityEngine;
 /// </summary>
 public class MovimientoRepartidor : MonoBehaviour
 {
-    public float speed = 15.0f;
-    public float turnSpeed = 10.0f;
+    public float speed = 30.0f;
+    public float turnSpeed = 100.0f;
     public float horizontalInput;
     public float forwardInput;
 

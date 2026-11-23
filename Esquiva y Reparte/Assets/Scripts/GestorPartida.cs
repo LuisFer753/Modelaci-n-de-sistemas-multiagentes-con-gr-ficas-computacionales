@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class GestorPartida : MonoBehaviour
 {
-    public int meta = 20; // Total de paquetes a entregar
+    public int meta = 10; // Total de paquetes a entregar
     public int capacidadCamioneta = 5;
     public float tiempoRestante = 60f;
-    public float penalizacionChoque = 2f; // Segundos perdidos al chocar con coches
+    public float penalizacionChoque = 1f; // Segundos perdidos al chocar con coches
     public Renderer estacionCorreosRenderer; // Para pintarla de color como aviso
     public GameObject[] todasLasCasas; // Todas las casas
     public int entregados = 0;
@@ -17,11 +18,17 @@ public class GestorPartida : MonoBehaviour
     {
         get { return entregados >= meta; }
     }
+    public TMP_Text textoEntregas;
+    public TMP_Text textoCarga;
+    public TMP_Text textoTiempo;
+    public TMP_Text textoResultado;
 
     void Start()
     {
+        if (textoResultado != null) textoResultado.gameObject.SetActive(false);
         // Al iniciar se cargan 5 paquetes y activa 5 casas
         RecargarPaquetes();
+        ActualizarUI();
     }
 
     void Update()
@@ -36,8 +43,12 @@ public class GestorPartida : MonoBehaviour
         tiempoRestante -= Time.deltaTime;
         if (tiempoRestante <= 0f)
         {
+            tiempoRestante = 0f;
+            ActualizarUI();
             Perder();
+            return;
         }
+        ActualizarUI();
     }
 
     public void Entregar(GameObject casa)
@@ -51,7 +62,7 @@ public class GestorPartida : MonoBehaviour
 
         if (MisionCumplida)
         {
-            Debug.Log("Todos entregados. Ve a estación de correos.");
+            Debug.Log("Todos entregados. Ve a la estación de correos.");
             if (estacionCorreosRenderer != null) estacionCorreosRenderer.material.color = Color.green;
         }
         else if (enCamioneta == 0)
@@ -73,6 +84,7 @@ public class GestorPartida : MonoBehaviour
         {
             RecargarPaquetes();
             if (estacionCorreosRenderer != null) estacionCorreosRenderer.material.color = Color.white;
+            ActualizarUI();
         }
     }
 
@@ -84,8 +96,11 @@ public class GestorPartida : MonoBehaviour
         if (tiempoRestante <= 0f)
         {
             tiempoRestante = 0f;
+            ActualizarUI();
             Perder();
+            return;
         }
+        ActualizarUI();
     }
 
     private void RecargarPaquetes()
@@ -108,11 +123,37 @@ public class GestorPartida : MonoBehaviour
         }
     }
 
+    void ActualizarUI()
+    {
+        if (textoEntregas != null)
+            textoEntregas.text = "Entregados: " + entregados + " / " + meta;
+
+        if (textoTiempo != null)
+            textoTiempo.text = "Tiempo: " + Mathf.CeilToInt(tiempoRestante) + "s";
+
+        if (textoCarga != null)
+        {
+            if (MisionCumplida)
+                textoCarga.text = "¡10/10! Vuelve al edificio";
+            else if (enCamioneta == 0)
+                textoCarga.text = "Sin paquetes: Vuelve a Correos";
+            else
+                textoCarga.text = "En camioneta: " + enCamioneta + " / " + capacidadCamioneta;
+        }
+    }
+
     public void Ganar()
     {
         if (terminada) return;
         terminada = true;
         Debug.Log("¡Ganaste! Presiona R para reiniciar.");
+
+        if (textoResultado != null)
+        {
+            textoResultado.gameObject.SetActive(true);
+            textoResultado.text = "¡Ganaste! Presiona R para reiniciar.";
+            textoResultado.color = Color.green;
+        }
     }
 
     public void Perder()
@@ -121,6 +162,12 @@ public class GestorPartida : MonoBehaviour
         terminada = true;
         Debug.Log("Perdiste");
         if (estacionCorreosRenderer != null) estacionCorreosRenderer.material.color = Color.red;
+        if (textoResultado != null)
+        {
+            textoResultado.gameObject.SetActive(true);
+            textoResultado.text = "¡SE ACABÓ EL TIEMPO!";
+            textoResultado.color = Color.red;
+        }
         Invoke("Reiniciar", 2.0f); // Muestra mensaje y reinicia solo
     }
 
